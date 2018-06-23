@@ -1,6 +1,6 @@
 From time to time you may get clients or even managers requesting reports about their Office 365 environment. Another popular reason to compile a report on an Office 365 tenant would be when you take over a new client and you are auditing their environment trying to figure out what exactly is going on.
 
-Click here to view the report as we go through it.
+(HTML Report Example)[http://thelazyadministrator.com/wp-content/uploads/2018/06/22-6-2018-O365TenantReport.html]
 
 Using the PowerShell module “ReportHTML“, we can create beautiful and interactive HTML reports. Below I will walk you through a report I spent some time creating that includes tabs, charts, data tables and more.  Below you can see the first page of my report. You can navigate to different content by clicking the tab. If you wanted to view the Users report you would just click on that tab.
 
