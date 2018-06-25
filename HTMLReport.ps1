@@ -2,7 +2,7 @@
 	.NOTES
 	===========================================================================
 	 Updated on:   	6/25/2018
-	 Created by:   	/u/TheLazyAdministrator, /u/jmn_lab	
+	 Created by:   	/u/TheLazyAdministrator, /u/jmn_lab, /u/nothingpersonalbro	
 	===========================================================================
 
         AzureAD  Module is required
