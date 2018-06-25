@@ -392,8 +392,8 @@ Foreach ($License in $Licenses)
 	$TotalAmount = $License.PrepaidUnits.enabled
 	$Assigned = $License.ConsumedUnits
 	$Unassigned = ($TotalAmount - $Assigned)
-	#We dont want to include the free/trial licenses
-	If ($TotalAmount -lt 1000)
+
+	If ($TotalAmount -ne $Null)
 	{
 		$obj = [PSCustomObject]@{
 			'Name'					    = $Olicense
