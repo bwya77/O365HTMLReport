@@ -1,7 +1,7 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Updated on:   	6/25/2018 12:39 CST AM
+	 Updated on:   	6/25/2018
 	 Created by:   	/u/TheLazyAdministrator, /u/jmn_lab	
 	===========================================================================
 
@@ -18,7 +18,6 @@
     .Link
         http://thelazyadministrator.com/2018/06/22/create-an-interactive-html-report-for-office-365-with-powershell/
 #>
-
 $CompanyLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/logo-2-e1529684959389.png"
 $RightLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/amd.png"
 $ReportSavePath = "C:\Automation\"
@@ -281,7 +280,7 @@ foreach ($Domain in $Domains)
 	$obj = [PSCustomObject]@{
 		'Domain Name'				  = $DomainName
 		'Verification Status'		  = $Verified
-		'Default"'				      = $DefaultStatus
+		'Default'				      = $DefaultStatus
 	}
 	
 	$DomainTable.add($obj)
@@ -476,15 +475,15 @@ Foreach ($User in $AllUsers)
 	$UPN = $User.UserPrincipalName
 	$UserLicenses = ($NewObject02 | Select-Object -ExpandProperty Licenses) -join ", "
 	$Enabled = $User.AccountEnabled
-	$LastLogonUser = (Get-Mailbox -Identity $User.DisplayName -ErrorAction SilentlyContinue | Get-MailboxStatistics -ErrorAction SilentlyContinue).LastLogonTime
+	$ResetPW = Get-User $User.DisplayName | Select-Object -ExpandProperty ResetPasswordOnNextLogon 
 	
 	$obj = [PSCustomObject]@{
-		'Name'				    = $Name
-		'UserPrincipalName'	    = $UPN
-		'Licenses'			    = $UserLicenses
-		'Last Mailbox Logon'    = $LastLogonUser
-		'Enabled'			    = $Enabled
-		'E-mail Addresses'	    = $ProxyC
+		'Name'				                   = $Name
+		'UserPrincipalName'	                   = $UPN
+		'Licenses'			                   = $UserLicenses
+		'Reset Password at Next Logon'         = $ResetPW
+		'Enabled'			                   = $Enabled
+		'E-mail Addresses'	                   = $ProxyC
 		
 	}
 	
