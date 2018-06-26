@@ -688,7 +688,7 @@ If (($ContactMailUserTable).count -eq 0)
 	}
 }
 
-$Rooms = Get-Mailbox -Filter '(RecipientTypeDetails -eq "RoomMailBox")'
+$Rooms = Get-Mailbox -ResultSize Unlimited -Filter '(RecipientTypeDetails -eq "RoomMailBox")'
 Foreach ($Room in $Rooms)
 {
 	$RoomArray = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -720,7 +720,7 @@ If (($RoomTable).count -eq 0)
 }
 
 
-$EquipMailboxes = Get-Mailbox -Filter '(RecipientTypeDetails -eq "EquipmentMailBox")'
+$EquipMailboxes = Get-Mailbox -ResultSize Unlimited -Filter '(RecipientTypeDetails -eq "EquipmentMailBox")'
 Foreach ($EquipMailbox in $EquipMailboxes)
 {
 	$EquipArray = New-Object 'System.Collections.Generic.List[System.Object]'
