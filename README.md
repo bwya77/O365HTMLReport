@@ -53,61 +53,52 @@ The chart displays licensed users and unlicensed users. In my tenant, I have a l
 
 Shared Mailboxes will display the name of each Shared Mailbox, the primary email, and all other alias e-mail addresses.
 
-Contacts
+##Contacts
 
+![Shared Mailboxes](http://thelazyadministrator.com/wp-content/uploads/2018/06/contacts.png)
 
 The Contacts report has two separate reports contained within it. The first report is the Mail Contact report which will display the name of each Mail Contact and their external e-mail address. The second report is the Mail Users report which will display the name of each Mail User, the primary e-m, il and all other alias e-mail addresses.
 
-Resources
+##Resources
 
+![Shared Mailboxes](http://thelazyadministrator.com/wp-content/uploads/2018/06/resources.png)
 
 Similarly to the Contact report, the Resources report has two reports within it. The first one is Room Mailboxes and will display each Room Mailbox Name, Primary E-Mail, and all other alias e-mail addresses.
 
 The second report is Equipment Mailboxes and will display each Equipment Mailbox Name, Primary E-Mail and all other alias e-mail addresses.
 
-Features
-Charts
+# .Features
+
+## Charts
 The report contains rich interactive charts. When you hover over it you will see the values.
 
+![Charts](http://thelazyadministrator.com/wp-content/uploads/2018/06/ezgif.com-crop-1.gif)
 
+## Filter Data
 
-Filter Data
+![Filter Data](http://thelazyadministrator.com/wp-content/uploads/2018/06/filterdata.gif)
+
 Using Data Tables we can filter the dataset to find exactly what we need. In my example below I want to see all groups that Brad Robertson is a member of. If I have a lot of groups I may not want to spend the time trying to find his name.
-
-
 
 By just typing “Brad” I can see the only group he is a member of is a Distribution List named “Managers”. You can even see that as we start typing the data is already being filtered out before we even finish.
 
-Ordering
+## Ordering
+
+![Odering](http://thelazyadministrator.com/wp-content/uploads/2018/06/ezgif.com-video-to-gif.gif)
+
 By default all the data you will automatically be ordered alphabetically by name. But if you want to order it by something else you can by clicking on that property. In my example, I want to find all users that are currently locked-out or disabled. By clicking on the “Disabled” property in the user’s report I can see which users show a “True”. It will filter against all users, even though by default I am only showing the first 15 results.
 
+## Friendly License Names
 
+![Filter Data](http://thelazyadministrator.com/wp-content/uploads/2018/06/licname-768x578.png)
 
-Friendly License Names
 By using a HashTable we can convert the AccountSKU to a much more friendly name. If the HashTable does not have a friendly name for the SKU it will fail back and use the SKU
 
+## Error Handling
 
+![Filter Data](http://thelazyadministrator.com/wp-content/uploads/2018/06/errorhandling.png)
 
-How to Run the Script
-If you don’t’ need to modify anything with the report at all then this will be incredibly simple to run because it only requires 2 modules and if you have Office 365, odds are you already have one of them.
-
-Once you have the 2 modules installed, copy or download the script and you can just run it as is (but you may want to modify the first 3 lines where it specifies the left image, right image and output path). It will prompt you for Office 365 credentials so it can connect to Office 365 to extract the data.
-
-Modules
-You need two modules to run this report
-
-ReportHTML
-MSOnline
-Permissions
-No special permissions are required. You don’t need to set up a registered app or API access. It’s best to use your tenant administrator account which is most likely the account you use anyways when managing Office 365 via PowerShell.
-
-Etc..
-You will most likely want to modify the first 3 lines of the script, these determine the left logo, right logo and the directory you save the report in. Once the script has finished running it will launch the HTML report automatically as well.
+When the report is gathering its data, if it comes across an empty collection (no users with strong password enforemcent disabled, no resource mailboxes, etc) it will display a friendly message in the report instead of an error in the console
 
 
 
-The great part of having an HTML report is when you send it to your customer or manager, they can interact with it the same way you do. There are no extra files needed, everything is embedded within the HTML file.
-
-If you want to play more with the ReportHTML module I recommend checking out this website. It takes a little bit to learn how everything is formatted but once you grasp the formatting you will realize how easy making HTML reports using the module is.
-
-You can find this report also on GitHub here. As I modify the report I will update this article and the GitHub repository.
