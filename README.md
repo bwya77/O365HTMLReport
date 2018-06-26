@@ -53,13 +53,13 @@ The chart displays licensed users and unlicensed users. In my tenant, I have a l
 
 Shared Mailboxes will display the name of each Shared Mailbox, the primary email, and all other alias e-mail addresses.
 
-##Contacts
+## Contacts
 
 ![Shared Mailboxes](http://thelazyadministrator.com/wp-content/uploads/2018/06/contacts.png)
 
 The Contacts report has two separate reports contained within it. The first report is the Mail Contact report which will display the name of each Mail Contact and their external e-mail address. The second report is the Mail Users report which will display the name of each Mail User, the primary e-m, il and all other alias e-mail addresses.
 
-##Resources
+## Resources
 
 ![Shared Mailboxes](http://thelazyadministrator.com/wp-content/uploads/2018/06/resources.png)
 
