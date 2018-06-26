@@ -19,12 +19,28 @@
     .Link
         http://thelazyadministrator.com/2018/06/22/create-an-interactive-html-report-for-office-365-with-powershell/
 #>
+#########################################
+#                                       #
+#            VARIABLES                  #
+#                                       #
+#########################################
+
+#Company logo that will be displayed on the left, can be URL or UNC
 $CompanyLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/logo-2-e1529684959389.png"
+
+#Logo that will be on the right side, UNC or URL
 $RightLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/amd.png"
+
+#Location the report will be saved to
 $ReportSavePath = "C:\Automation\"
 
 #Variable to filter licenses out, in current state will only get licenses with a count less than 9,000 this will help filter free/trial licenses
 $LicenseFilter = "9000"
+
+#If you want to include users last logon mailbox timestamp, set this to true
+$IncludeLastLogonTimestamp = $False
+
+########################################
 
 
 $credential = Get-Credential -Message "Please enter your Office 365 credentials"
@@ -515,15 +531,30 @@ Foreach ($User in $AllUsers)
 	$Enabled = $User.AccountEnabled
 	$ResetPW = Get-User $User.DisplayName | Select-Object -ExpandProperty ResetPasswordOnNextLogon 
 	
-	$obj = [PSCustomObject]@{
-		'Name'				                   = $Name
-		'UserPrincipalName'	                   = $UPN
-		'Licenses'			                   = $UserLicenses
-		'Reset Password at Next Logon'         = $ResetPW
-		'Enabled'			                   = $Enabled
-		'E-mail Addresses'	                   = $ProxyC
-		
-	}
+    If ($IncludeLastLogonTimestamp -eq $True)
+    {
+    $LastLogon = Get-Mailbox $User.DisplayName | Get-MailboxStatistics -ErrorAction SilentlyContinue  | Select-Object -ExpandProperty LastLogonTime -ErrorAction SilentlyContinue
+	    $obj = [PSCustomObject]@{
+		    'Name'				                   = $Name
+		    'UserPrincipalName'	                   = $UPN
+		    'Licenses'			                   = $UserLicenses
+            'Last Mailbox Logon'                   = $LastLogon
+		    'Reset Password at Next Logon'         = $ResetPW
+		    'Enabled'			                   = $Enabled
+		    'E-mail Addresses'	                   = $ProxyC
+	    }
+    }
+    Else
+    {
+    	$obj = [PSCustomObject]@{
+		    'Name'				                   = $Name
+		    'UserPrincipalName'	                   = $UPN
+		    'Licenses'			                   = $UserLicenses
+		    'Reset Password at Next Logon'         = $ResetPW
+		    'Enabled'			                   = $Enabled
+		    'E-mail Addresses'	                   = $ProxyC
+	    }
+}
 	
 	$usertable.add($obj)
 }
