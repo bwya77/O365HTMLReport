@@ -23,8 +23,8 @@ $CompanyLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/logo-
 $RightLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/amd.png"
 $ReportSavePath = "C:\Automation\"
 
-#Variable to filter licenses out, in current state will only get licenses with a count less than 10,000 this will help filter free/trial licenses
-$LicenseFilter = "10000"
+#Variable to filter licenses out, in current state will only get licenses with a count less than 9,000 this will help filter free/trial licenses
+$LicenseFilter = "9000"
 
 
 $credential = Get-Credential -Message "Please enter your Office 365 credentials"
