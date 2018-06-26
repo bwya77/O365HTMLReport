@@ -40,14 +40,32 @@ $LicenseFilter = "9000"
 #If you want to include users last logon mailbox timestamp, set this to true
 $IncludeLastLogonTimestamp = $False
 
+#Set to $True if your global admin requires 2FA
+$2FA = $False
+
 ########################################
 
 
-$credential = Get-Credential -Message "Please enter your Office 365 credentials"
-Import-Module AzureAD
-Connect-AzureAD -Credential $credential
-$exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/" -Credential $credential -Authentication "Basic" -AllowRedirection
-Import-PSSession $exchangeSession -AllowClobber
+If ($2FA -eq $False)
+{
+    $credential = Get-Credential -Message "Please enter your Office 365 credentials"
+    Import-Module AzureAD
+    Connect-AzureAD -Credential $credential
+    $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/"  -Authentication "Basic" -AllowRedirection -Credential $credential
+    Import-PSSession $exchangeSession -AllowClobber
+}
+Else
+{
+    $Modules = dir $Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1 -Recurse | Select-Object -ExpandProperty Target -First 1
+    foreach ($Module in $Modules)
+    {
+     Import-Module "$Module"
+    }
+    #Connect to MSOnline w/2FA
+    Connect-AzureAD
+    #Connect to Exchange Online w/ 2FA
+    Connect-EXOPSSession
+}
 
 $Table = New-Object 'System.Collections.Generic.List[System.Object]'
 $LicenseTable = New-Object 'System.Collections.Generic.List[System.Object]'
