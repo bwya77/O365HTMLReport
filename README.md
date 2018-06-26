@@ -1,17 +1,22 @@
-From time to time you may get clients or even managers requesting reports about their Office 365 environment. Another popular reason to compile a report on an Office 365 tenant would be when you take over a new client and you are auditing their environment trying to figure out what exactly is going on.
+# .Description
+
+Generate an interactive HTML report on your Office 365 environement. This report also allows you to interact with the data set within the report and configure how you want it ordered. 
 
 [HTML Report Example](http://thelazyadministrator.com/wp-content/uploads/2018/06/22-6-2018-O365TenantReport.html)
 
-Using the PowerShell module “ReportHTML“, we can create beautiful and interactive HTML reports. Below I will walk you through a report I spent some time creating that includes tabs, charts, data tables and more.  Below you can see the first page of my report. You can navigate to different content by clicking the tab. If you wanted to view the Users report you would just click on that tab.
+![Dashboard](http://thelazyadministrator.com/wp-content/uploads/2018/06/dash.png)
 
-Dashboard
+# .Report Overview
+
+## Dashboard
+
 The Dashboard contains some basic information about the Office 365 tenant including the following:
 
-Company information
-Global Administrators
-Strong Password Enforcement
-Recent E-Mails
-Domains
+- Company information
+- Global Administrators
+- Strong Password Enforcement
+- Recent E-Mails
+- Domains
 
 
 One of the greatest benefits of this report is that we can interact with the data whenever we would like. If you notice the reports “Recent E-Mails” contains a search bar. If we had more recent E-mails we can either go to the next page of results by click “Next” or we can search for a keyword which will filter the existing data.
