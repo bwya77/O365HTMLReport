@@ -1,7 +1,7 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Updated on:   	6/25/2018
+	 Updated on:   	6/26/2018
 	 Created by:   	/u/TheLazyAdministrator
      Contributors:  /u/jmn_lab, /u/nothingpersonalbro	
 	===========================================================================
@@ -22,6 +22,9 @@
 $CompanyLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/logo-2-e1529684959389.png"
 $RightLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/amd.png"
 $ReportSavePath = "C:\Automation\"
+
+#Variable to filter licenses out, in current state will only get licenses with a count less than 10,000 this will help filter free/trial licenses
+$LicenseFilter = "10000"
 
 
 $credential = Get-Credential -Message "Please enter your Office 365 credentials"
@@ -391,7 +394,7 @@ Foreach ($License in $Licenses)
 	$Assigned = $License.ConsumedUnits
 	$Unassigned = ($TotalAmount - $Assigned)
 
-	If ($TotalAmount -ne $Null)
+	If ($TotalAmount -lt $LicenseFilter)
 	{
 		$obj = [PSCustomObject]@{
 			'Name'					    = $Olicense
