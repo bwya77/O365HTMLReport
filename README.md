@@ -21,29 +21,35 @@ The Dashboard contains some basic information about the Office 365 tenant includ
 
 One of the greatest benefits of this report is that we can interact with the data whenever we would like. If you notice the reports “Recent E-Mails” contains a search bar. If we had more recent E-mails we can either go to the next page of results by click “Next” or we can search for a keyword which will filter the existing data.
 
-Groups
+## Groups
 
+![Groups](http://thelazyadministrator.com/wp-content/uploads/2018/06/Groups-e1529959616355.png)
 
 The Groups report shows us the name of each group, the type of group, members and the E-mail address of each group. Below is an interactive char that gives us an overview of what types of groups are found in our tenant. As we see above, my tenant is made up of mostly Distribution Groups.
 
-Licenses
+## Licenses
 
+![Licenses](http://thelazyadministrator.com/wp-content/uploads/2018/06/licenses-e1529959644835.png)
 
 The Licenses report displays each license in the tenant and their total counts, assigned count and unassigned count. Using a PowerShell HashTable we are able to convert the SkuID of the license and convert it to a much friendlier name. If the HashTable doesn’t have the SkuId it will default back to the SKU.
 
 Below that we have two interactive charts that show total licenses by type of license and another chart that show licenses assigned by type. In this tenant, we have much more E3 licenses assigned than we do Office ProPlus.
 
-Users
+## Users
 
+![Licenses](http://thelazyadministrator.com/wp-content/uploads/2018/06/userdash.png)
 
 The Users report displays a wealth of information. Here you will have the Name of all your users, their UserPrincipalName, which license each user has assigned to them, the last login, If the user is disabled or not, and finally all of their alias e-mail addresses.
+
+You can also report on users last logon timestamp by changing the $IncludeLastLogonTimestamp variable to $True
 
 The data table will display the first 15 results, we can have it display 15, 25, 50, 100 or All the results by using the drop-down on the top left corner. We can filter the current data by using the search bar in the top right-hand corner.
 
 The chart displays licensed users and unlicensed users. In my tenant, I have a little more users without a license than I do with them.
 
-Shared Mailboxes
+## Shared Mailboxes
 
+![Shared Mailboxes](http://thelazyadministrator.com/wp-content/uploads/2018/06/SharedMBX.png)
 
 Shared Mailboxes will display the name of each Shared Mailbox, the primary email, and all other alias e-mail addresses.
 
