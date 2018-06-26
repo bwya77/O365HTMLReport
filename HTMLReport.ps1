@@ -452,23 +452,22 @@ If (($IsLicensedUsersTable).count -eq 0)
 	}
 }
 
-
 Foreach ($User in $AllUsers)
 {
 	$ProxyA = New-Object 'System.Collections.Generic.List[System.Object]'
 	$NewObject02 = New-Object 'System.Collections.Generic.List[System.Object]'
 	$NewObject01 = New-Object 'System.Collections.Generic.List[System.Object]'
-	$UserLicenses = ($User | Select-Object -ExpandProperty AssignedLicenses).SkuId
+    $UserLicenses = ($user | Select -ExpandProperty AssignedLicenses).SkuID
 	If (($UserLicenses).count -gt 1)
 	{
 		Foreach ($UserLicense in $UserLicenses)
 		{
-			$lic = ($licenses | Where-Object { $_.skuid -match ($user | Select-Object -ExpandProperty assignedLicenses).skuid }).SkuPartNumber
-			$TextLic = $Sku.Item("$lic")
+            $UserLicense = ($licenses | Where-Object { $_.skuid -match $UserLicense }).SkuPartNumber
+			$TextLic = $Sku.Item("$UserLicense")
 			If (!($TextLic))
 			{
 				$NewObject01 = [PSCustomObject]@{
-					'Licenses'	   = $lic
+					'Licenses'	   = $UserLicense
 				}
 				$NewObject02.add($NewObject01)
 			}
@@ -484,7 +483,7 @@ Foreach ($User in $AllUsers)
 	}
 	Elseif (($UserLicenses).count -eq 1)
 	{
-		$lic = ($licenses | Where-Object { $_.skuid -match ($user | Select-Object -ExpandProperty assignedLicenses).skuid }).SkuPartNumber
+		$lic = ($licenses | Where-Object { $_.skuid -match $UserLicenses}).SkuPartNumber
 		$TextLic = $Sku.Item("$lic")
 		If (!($TextLic))
 		{
