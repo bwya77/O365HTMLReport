@@ -30,13 +30,13 @@
 #########################################
 
 #Company logo that will be displayed on the left, can be URL or UNC
-$CompanyLogo = "https://www.tetravx.com/wp-content/uploads/2017/12/TetraVX-logo.png"
+$CompanyLogo = "https://vignette.wikia.nocookie.net/mobius-paradox/images/4/4e/Th.jpg/revision/latest?cb=20150621175014"
 
 #Logo that will be on the right side, UNC or URL
 $RightLogo = "http://thelazyadministrator.com/wp-content/uploads/2018/06/amd.png"
 
 #Location the report will be saved to
-$ReportSavePath = "C:\users\ojrad\desktop\"
+$ReportSavePath = "C:\temp\"
 
 #Variable to filter licenses out, in current state will only get licenses with a count less than 9,000 this will help filter free/trial licenses
 $LicenseFilter = "9000"
