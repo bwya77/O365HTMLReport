@@ -77,7 +77,7 @@ There is a graphical breakdown of number utilization as well, showing the total 
 
 ## Skype for Business Users
 
-The Skype for Business Users tab has a table that lists all enabled Skype for Business users' name, user principal name, SIP address, and associated phone number (if they have one).
+The Skype for Business Users tab has a table that lists all enabled Skype for Business users with their name, user principal name, SIP address, and associated phone number (if they have one).
 
 This page also displays the Emergency Response Location associated with the user's DID (if they have one).  This location information is sent to the Public Safety Answering Point (PSAP) in the event of an emergency call.
 
