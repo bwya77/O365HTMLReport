@@ -67,6 +67,20 @@ Similarly to the Contact report, the Resources report has two reports within it.
 
 The second report is Equipment Mailboxes and will display each Equipment Mailbox Name, Primary E-Mail and all other alias e-mail addresses.
 
+## Telephone Numbers
+
+The Telephone Numbers section provides an overview of all tenant-owned phone numbers in the Skype for Business Online tenant.  
+
+It lists all numbers, whether or not they are assigned, the origin location of the phone number, and the number class.  The number class describes whether the number is being used by a user, a call queue or auto attendant, or as a dial-in conferencing number.  It also tells you if the number is currently unassigned.
+
+There is a graphical breakdown of number utilization as well, showing the total number of phone numbers owned and what they are being used for.
+
+## Skype for Business Users
+
+The Skype for Business Users tab has a table that lists all enabled Skype for Business users with their name, user principal name, SIP address, and associated phone number (if they have one).
+
+This page also displays the Emergency Response Location associated with the user's DID (if they have one).  This location information is sent to the Public Safety Answering Point (PSAP) in the event of an emergency call.
+
 # .Features
 
 ## Charts
