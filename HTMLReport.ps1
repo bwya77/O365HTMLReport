@@ -550,11 +550,11 @@ Foreach ($User in $AllUsers)
 	$UPN = $User.UserPrincipalName
 	$UserLicenses = ($NewObject02 | Select-Object -ExpandProperty Licenses) -join ", "
 	$Enabled = $User.AccountEnabled
-	$ResetPW = Get-User $User.DisplayName | Select-Object -ExpandProperty ResetPasswordOnNextLogon 
+	$ResetPW = Get-User $User.UserPrincipalName | Select-Object -ExpandProperty ResetPasswordOnNextLogon
 	
     If ($IncludeLastLogonTimestamp -eq $True)
     {
-    $LastLogon = Get-Mailbox $User.DisplayName | Get-MailboxStatistics -ErrorAction SilentlyContinue  | Select-Object -ExpandProperty LastLogonTime -ErrorAction SilentlyContinue
+    $LastLogon = Get-Mailbox $User.DisplayName -ErrorAction SilentlyContinue | Get-MailboxStatistics -ErrorAction SilentlyContinue  | Select-Object -ExpandProperty LastLogonTime -ErrorAction SilentlyContinue
 	    $obj = [PSCustomObject]@{
 		    'Name'				                   = $Name
 		    'UserPrincipalName'	                   = $UPN
