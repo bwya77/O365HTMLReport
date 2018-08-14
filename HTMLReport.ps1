@@ -82,15 +82,15 @@ Else
     }
     Write-Host "Credential prompt to connect to Azure Graph" -ForegroundColor Yellow
     #Connect to Azure Graph w/2FA
-    #Connect-AzureAD
+    Connect-AzureAD
 
     Write-Host "Credential prompt to connect to Azure" -ForegroundColor Yellow
 	#Connect to Azure w/ 2FA
-    #Connect-MSOLService
+    Connect-MSOLService
 
     Write-Host "Credential prompt to connect to Exchange Online" -ForegroundColor Yellow
     #Connect to Exchange Online w/ 2FA
-    #Connect-EXOPSSession
+    Connect-EXOPSSession
 }
 
 
@@ -456,9 +456,9 @@ If (($UserAdminTable).count -eq 0)
 	}
 }
 
-Write-Host "Getting Tenant Tech Account Exchange Admins" -ForegroundColor white
+Write-Host "Getting Helpdesk Admins" -ForegroundColor white
 #Get Tenant Tech Account Exchange Admins
-$TechExchAdmins = Get-RoleGroupMember -Identity "Tech Account Restricted Exchange Management" -ErrorAction SilentlyContinue
+$TechExchAdmins = Get-RoleGroupMember -Identity "Helpdesk Administrator" -ErrorAction SilentlyContinue
 Foreach ($TechExchAdmin in $TechExchAdmins)
 {
 	$AccountInfo = Get-MsolUser -searchstring $TechExchAdmin.Name -ErrorAction SilentlyContinue
@@ -497,7 +497,7 @@ Foreach ($TechExchAdmin in $TechExchAdmins)
 If (($TechExchAdminTable).count -eq 0)
 {
 	$TechExchAdminTable = [PSCustomObject]@{
-		'Information'  = 'Information: No Users with the Tech Account Restricted Exchange Management role were found, refer to the Global Administrators list.'
+		'Information'  = 'Information: No Users with the Helpdesk Administrator role were found, refer to the Global Administrators list.'
 	}
 }
 
@@ -1403,7 +1403,7 @@ $rpt += Get-HTMLTabHeader -TabNames $tabarray
 		        $rpt+= Get-HtmlContentClose
 	        $rpt+= get-htmlColumnClose
 	            $rpt+= get-htmlColumn2of2
-		            $rpt+= Get-HtmlContentOpen -HeaderText 'Tech Account Restricted Exchange Admin Role'
+		            $rpt+= Get-HtmlContentOpen -HeaderText 'Helpdesk Administrators'
 			            $rpt+= get-htmlcontentdatatable $TechExchAdminTable -HideFooter 
 		        $rpt+= Get-HtmlContentClose
 	        $rpt+= get-htmlColumnClose
