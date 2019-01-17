@@ -127,6 +127,7 @@ $Sku = @{
 	"DESKLESSWOFFPACK"					     = "Office 365 (Plan K2)"
 	"LITEPACK"							     = "Office 365 (Plan P1)"
 	"EXCHANGESTANDARD"					     = "Office 365 Exchange Online Only"
+	"EXCHANGE_S_ESSENTIALS"				     = "Exchange Online Essentials"
 	"STANDARDPACK"						     = "Enterprise Plan E1"
 	"STANDARDWOFFPACK"					     = "Office 365 (Plan E2)"
 	"ENTERPRISEPACK"						 = "Enterprise Plan E3"
