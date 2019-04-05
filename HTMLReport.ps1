@@ -1,10 +1,10 @@
 <#	
 	.NOTES
 	===========================================================================
-     Version:       1.0.5
-	 Updated on:   	8/14/2018
+     Version:       1.0.6
+	 Updated on:   	03/19/2019
 	 Created by:   	/u/TheLazyAdministrator
-     Contributors:  /u/ascIVV, /u/jmn_lab, /u/nothingpersonalbro
+     Contributors:  /u/ascIVV, /u/jmn_lab, /u/nothingpersonalbro, /u/ItPro-Tips
 	===========================================================================
 
         AzureAD  Module is required
@@ -15,25 +15,16 @@
             https://www.powershellgallery.com/packages/ReportHTML/
 
         UPDATES
-        1.0.5
-            /u/ascIVV: Added the following:
-                - Admin Tab
-                    - Privileged Role Administrators
-                    - Exchange Administrators
-                    - User Account Administrators
-                    - Tech Account Restricted Exchange Admin Role
-                    - SharePoint Administrators
-                    - Skype Administrators
-                    - CRM Service Administrators
-                    - Power BI Administrators
-                    - Service Support Administrators
-                    - Billing Administrators
-            /u/TheLazyAdministrator
-                - Cleaned up formatting
-                - Error Handling for $Null obj
-                - Console status
-                - Windows Defender ATP SKU
-        
+        1.0.6
+            /u/ItPro-Tips::
+                - Add the Guests tab with some information about the guests
+                - Guest users are removed from the Users tab and add to the 'Guests' tab
+				- Add ~100 SKU and name
+                - Add Connect-MSOLService if 2FA is not used
+                - Switch from 'Get-AzureADTenantDetail' to old command 'Get-MsolCompanyInformation' to get more info
+                - Switch from 'Get-MailboxStatistics' to 'Search-UnifiedAuditLog' to get accurate data (https://www.petri.com/get-mailboxstatistics-cmdlet-wrong)
+                - Get all recipients/users just once
+                - Fix issue with proxyaddresses in Shared Mailboxes
 
 	.DESCRIPTION
 		Generate an interactive HTML report on your Office 365 tenant. Report on Users, Tenant information, Groups, Policies, Contacts, Mail Users, Licenses and more!
@@ -60,15 +51,23 @@ $ReportSavePath = "C:\Automation\"
 $LicenseFilter = "9000"
 
 #Set to $True if your global admin requires 2FA
-$2FA = $True
+$2FA = $False
 
 ########################################
 
+Import-Module AzureAD
 
 If ($2FA -eq $False)
 {
     $credential = Get-Credential -Message "Please enter your Office 365 credentials"
-    Import-Module AzureAD
+	
+	#Connect to Azure Graph w/o 2FA
+    Connect-AzureAD -Credential $credential
+	
+	#Connect to Azure w/o 2FA
+    Connect-MSOLService -Credential $credential
+	
+	#Connect to Azure Graph
     Connect-AzureAD -Credential $credential
     $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/"  -Authentication "Basic" -AllowRedirection -Credential $credential
     Import-PSSession $exchangeSession -AllowClobber
@@ -97,6 +96,7 @@ Else
 $Table = New-Object 'System.Collections.Generic.List[System.Object]'
 $LicenseTable = New-Object 'System.Collections.Generic.List[System.Object]'
 $UserTable = New-Object 'System.Collections.Generic.List[System.Object]'
+$GuestTable = New-Object 'System.Collections.Generic.List[System.Object]'
 $SharedMailboxTable = New-Object 'System.Collections.Generic.List[System.Object]'
 $GroupTypetable = New-Object 'System.Collections.Generic.List[System.Object]'
 $IsLicensedUsersTable = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -121,150 +121,264 @@ $CompanyInfoTable = New-Object 'System.Collections.Generic.List[System.Object]'
 $DomainTable = New-Object 'System.Collections.Generic.List[System.Object]'
 
 $Sku = @{
-	"O365_BUSINESS_ESSENTIALS"			     = "Office 365 Business Essentials"
-	"O365_BUSINESS_PREMIUM"				     = "Office 365 Business Premium"
-	"DESKLESSPACK"						     = "Office 365 (Plan K1)"
-	"DESKLESSWOFFPACK"					     = "Office 365 (Plan K2)"
-	"LITEPACK"							     = "Office 365 (Plan P1)"
-	"EXCHANGESTANDARD"					     = "Office 365 Exchange Online Only"
-	"STANDARDPACK"						     = "Enterprise Plan E1"
-	"STANDARDWOFFPACK"					     = "Office 365 (Plan E2)"
-	"ENTERPRISEPACK"						 = "Enterprise Plan E3"
-	"ENTERPRISEPACKLRG"					     = "Enterprise Plan E3"
-	"ENTERPRISEWITHSCAL"					 = "Enterprise Plan E4"
-	"STANDARDPACK_STUDENT"				     = "Office 365 (Plan A1) for Students"
-	"STANDARDWOFFPACKPACK_STUDENT"		     = "Office 365 (Plan A2) for Students"
-	"ENTERPRISEPACK_STUDENT"				 = "Office 365 (Plan A3) for Students"
-	"ENTERPRISEWITHSCAL_STUDENT"			 = "Office 365 (Plan A4) for Students"
-	"STANDARDPACK_FACULTY"				     = "Office 365 (Plan A1) for Faculty"
-	"STANDARDWOFFPACKPACK_FACULTY"		     = "Office 365 (Plan A2) for Faculty"
-	"ENTERPRISEPACK_FACULTY"				 = "Office 365 (Plan A3) for Faculty"
-	"ENTERPRISEWITHSCAL_FACULTY"			 = "Office 365 (Plan A4) for Faculty"
-	"ENTERPRISEPACK_B_PILOT"				 = "Office 365 (Enterprise Preview)"
-	"STANDARD_B_PILOT"					     = "Office 365 (Small Business Preview)"
-	"VISIOCLIENT"						     = "Visio Pro Online"
-	"POWER_BI_ADDON"						 = "Office 365 Power BI Addon"
-	"POWER_BI_INDIVIDUAL_USE"			     = "Power BI Individual User"
-	"POWER_BI_STANDALONE"				     = "Power BI Stand Alone"
-	"POWER_BI_STANDARD"					     = "Power-BI Standard"
-	"PROJECTESSENTIALS"					     = "Project Lite"
-	"PROJECTCLIENT"						     = "Project Professional"
-	"PROJECTONLINE_PLAN_1"				     = "Project Online"
-	"PROJECTONLINE_PLAN_2"				     = "Project Online and PRO"
-	"ProjectPremium"						 = "Project Online Premium"
-	"ECAL_SERVICES"						     = "ECAL"
-	"EMS"								     = "Enterprise Mobility Suite"
-	"RIGHTSMANAGEMENT_ADHOC"				 = "Windows Azure Rights Management"
-	"MCOMEETADV"							 = "PSTN conferencing"
-	"SHAREPOINTSTORAGE"					     = "SharePoint storage"
-	"PLANNERSTANDALONE"					     = "Planner Standalone"
-	"CRMIUR"								 = "CMRIUR"
-	"BI_AZURE_P1"						     = "Power BI Reporting and Analytics"
-	"INTUNE_A"							     = "Windows Intune Plan A"
-	"PROJECTWORKMANAGEMENT"				     = "Office 365 Planner Preview"
-	"ATP_ENTERPRISE"						 = "Exchange Online Advanced Threat Protection"
-	"EQUIVIO_ANALYTICS"					     = "Office 365 Advanced eDiscovery"
-	"AAD_BASIC"							     = "Azure Active Directory Basic"
-	"RMS_S_ENTERPRISE"					     = "Azure Active Directory Rights Management"
-	"AAD_PREMIUM"						     = "Azure Active Directory Premium"
-	"MFA_PREMIUM"						     = "Azure Multi-Factor Authentication"
-	"STANDARDPACK_GOV"					     = "Microsoft Office 365 (Plan G1) for Government"
-	"STANDARDWOFFPACK_GOV"				     = "Microsoft Office 365 (Plan G2) for Government"
-	"ENTERPRISEPACK_GOV"					 = "Microsoft Office 365 (Plan G3) for Government"
-	"ENTERPRISEWITHSCAL_GOV"				 = "Microsoft Office 365 (Plan G4) for Government"
-	"DESKLESSPACK_GOV"					     = "Microsoft Office 365 (Plan K1) for Government"
-	"ESKLESSWOFFPACK_GOV"				     = "Microsoft Office 365 (Plan K2) for Government"
-	"EXCHANGESTANDARD_GOV"				     = "Microsoft Office 365 Exchange Online (Plan 1) only for Government"
-	"EXCHANGEENTERPRISE_GOV"				 = "Microsoft Office 365 Exchange Online (Plan 2) only for Government"
-	"SHAREPOINTDESKLESS_GOV"				 = "SharePoint Online Kiosk"
-	"EXCHANGE_S_DESKLESS_GOV"			     = "Exchange Kiosk"
-	"RMS_S_ENTERPRISE_GOV"				     = "Windows Azure Active Directory Rights Management"
-	"OFFICESUBSCRIPTION_GOV"				 = "Office ProPlus"
-	"MCOSTANDARD_GOV"					     = "Lync Plan 2G"
-	"SHAREPOINTWAC_GOV"					     = "Office Online for Government"
-	"SHAREPOINTENTERPRISE_GOV"			     = "SharePoint Plan 2G"
-	"EXCHANGE_S_ENTERPRISE_GOV"			     = "Exchange Plan 2G"
-	"EXCHANGE_S_ARCHIVE_ADDON_GOV"		     = "Exchange Online Archiving"
-	"EXCHANGE_S_DESKLESS"				     = "Exchange Online Kiosk"
-	"SHAREPOINTDESKLESS"					 = "SharePoint Online Kiosk"
-	"SHAREPOINTWAC"						     = "Office Online"
-	"YAMMER_ENTERPRISE"					     = "Yammer for the Starship Enterprise"
-	"EXCHANGE_L_STANDARD"				     = "Exchange Online (Plan 1)"
-	"MCOLITE"							     = "Lync Online (Plan 1)"
-	"SHAREPOINTLITE"						 = "SharePoint Online (Plan 1)"
-	"OFFICE_PRO_PLUS_SUBSCRIPTION_SMBIZ"	 = "Office ProPlus"
-	"EXCHANGE_S_STANDARD_MIDMARKET"		     = "Exchange Online (Plan 1)"
-	"MCOSTANDARD_MIDMARKET"				     = "Lync Online (Plan 1)"
-	"SHAREPOINTENTERPRISE_MIDMARKET"		 = "SharePoint Online (Plan 1)"
-	"OFFICESUBSCRIPTION"					 = "Office ProPlus"
-	"YAMMER_MIDSIZE"						 = "Yammer"
-	"DYN365_ENTERPRISE_PLAN1"			     = "Dynamics 365 Customer Engagement Plan Enterprise Edition"
-	"ENTERPRISEPREMIUM_NOPSTNCONF"		     = "Enterprise E5 (without Audio Conferencing)"
-	"ENTERPRISEPREMIUM"					     = "Enterprise E5 (with Audio Conferencing)"
-	"MCOSTANDARD"						     = "Skype for Business Online Standalone Plan 2"
-	"PROJECT_MADEIRA_PREVIEW_IW_SKU"		 = "Dynamics 365 for Financials for IWs"
-	"STANDARDWOFFPACK_IW_STUDENT"		     = "Office 365 Education for Students"
-	"STANDARDWOFFPACK_IW_FACULTY"		     = "Office 365 Education for Faculty"
-	"EOP_ENTERPRISE_FACULTY"				 = "Exchange Online Protection for Faculty"
-	"EXCHANGESTANDARD_STUDENT"			     = "Exchange Online (Plan 1) for Students"
-	"OFFICESUBSCRIPTION_STUDENT"			 = "Office ProPlus Student Benefit"
-	"STANDARDWOFFPACK_FACULTY"			     = "Office 365 Education E1 for Faculty"
-	"STANDARDWOFFPACK_STUDENT"			     = "Microsoft Office 365 (Plan A2) for Students"
-	"DYN365_FINANCIALS_BUSINESS_SKU"		 = "Dynamics 365 for Financials Business Edition"
-	"DYN365_FINANCIALS_TEAM_MEMBERS_SKU"	 = "Dynamics 365 for Team Members Business Edition"
-	"FLOW_FREE"							     = "Microsoft Flow Free"
-	"POWER_BI_PRO"						     = "Power BI Pro"
-	"O365_BUSINESS"						     = "Office 365 Business"
-	"DYN365_ENTERPRISE_SALES"			     = "Dynamics Office 365 Enterprise Sales"
-	"RIGHTSMANAGEMENT"					     = "Rights Management"
-	"PROJECTPROFESSIONAL"				     = "Project Professional"
-	"VISIOONLINE_PLAN1"					     = "Visio Online Plan 1"
-	"EXCHANGEENTERPRISE"					 = "Exchange Online Plan 2"
-	"DYN365_ENTERPRISE_P1_IW"			     = "Dynamics 365 P1 Trial for Information Workers"
-	"DYN365_ENTERPRISE_TEAM_MEMBERS"		 = "Dynamics 365 For Team Members Enterprise Edition"
-	"CRMSTANDARD"						     = "Microsoft Dynamics CRM Online Professional"
-	"EXCHANGEARCHIVE_ADDON"				     = "Exchange Online Archiving For Exchange Online"
-	"EXCHANGEDESKLESS"					     = "Exchange Online Kiosk"
-	"SPZA_IW"							     = "App Connect"
-	"WINDOWS_STORE"						     = "Windows Store for Business"
-	"MCOEV"								     = "Microsoft Phone System"
-	"VIDEO_INTEROP"						     = "Polycom Skype Meeting Video Interop for Skype for Business"
-	"SPE_E5"								 = "Microsoft 365 E5"
-	"SPE_E3"								 = "Microsoft 365 E3"
-	"ATA"								     = "Advanced Threat Analytics"
-	"MCOPSTN2"							     = "Domestic and International Calling Plan"
-	"FLOW_P1"							     = "Microsoft Flow Plan 1"
-	"FLOW_P2"							     = "Microsoft Flow Plan 2"
-    "WIN_DEF_ATP"                            = "Windows Defender ATP"
+	"AAD_BASIC"							    = "Azure Active Directory Basic"
+	"AAD_PREMIUM"						    = "Azure Active Directory Premium P1"
+	"AAD_PREMIUM_P2"						= "Azure Active Directory Premium P2"
+	"ADALLOM_O365"                          = "Office 365 Cloud App Security"
+	"ADALLOM_S_DISCOVERY"					= "Unknown"
+	"ATA"									= "Advanced Threat Analytics"
+	"ATP_ENTERPRISE"						= "Exchange Online Advanced Threat Protection"
+	"ATP_ENTERPRISE_FACULTY"             	= "Exchange Online Advanced Threat Protection"
+	"BI_AZURE_P1"						    = "Power BI Reporting and Analytics"
+	"BI_AZURE_P2"	                        = "Power BI Pro"
+	"BPOS_S_TODO_1"							= "To-Do Plan1 from E1"
+	"BPOS_S_TODO_2"							= "To-Do Plan2 from E3, 34 and Microsoft 365 E3"
+	"BPOS_S_TODO_3"							= "To-Do Plan3 from E3 Developer, E5, E5 without audio conferencing"
+	"BPOS_S_TODO_FIRSTLINE"					= "To-Do Plan1 from F1"
+	"CRMINSTANCE"                        	= "Dynamics CRM Online Additional Production Instance"
+	"CRMIUR"								= "CMRIUR"
+	"CRMPLAN1"                           	= "Dynamics CRM Online Essential"
+	"CRMPLAN2"                           	= "Dynamics CRM Online Plan 2"
+	"CRMSTANDARD"						    = "Microsoft Dynamics CRM Online Professional"
+	"CRMSTORAGE"                         	= "Microsoft Dynamics CRM Online Additional Storage"
+	"CRMTESTINSTANCE"                    	= "CRM Test Instance"
+	"Deskless" 								= "Microsoft StaffHub"
+	"DESKLESSPACK"						    = "Office 365 (Plan K1/F1)"
+	"DESKLESSPACK_GOV"					    = "Microsoft Office 365 (Plan F1/K1) for Government"
+	"DESKLESSPACK_YAMMER"                	= "Office 365 Enterprise F1 with Yammer"
+	"DESKLESSWOFFPACK"					    = "Office 365 (Plan K2/F2)"
+	"DESKLESSWOFFPACK_GOV"					= "Office 365 (Plan K2) for Government"
+	"DYN365_ENTERPRISE_P1_IW"			    = "Dynamics 365 P1 Trial for Information Workers"
+	"DYN365_ENTERPRISE_PLAN1"			    = "Dynamics 365 Customer Engagement Plan Enterprise Edition"
+	"DYN365_ENTERPRISE_SALES"			    = "Dynamics Office 365 Enterprise Sales"
+	"DYN365_ENTERPRISE_TEAM_MEMBERS"		= "Dynamics 365 For Team Members Enterprise Edition"
+	"DYN365_FINANCIALS_BUSINESS_SKU"		= "Dynamics 365 for Financials Business Edition"
+	"DYN365_FINANCIALS_TEAM_MEMBERS_SKU"	= "Dynamics 365 for Team Members Business Edition"
+	"ECAL_SERVICES"						    = "ECAL"
+	"EMS"								    = "Enterprise Mobility Suite"
+	"EMSPREMIUM"                         	= "Enterprise Mobility + Security E5"
+	"ENTERPRISEPACK"						= "Enterprise Plan E3"
+	"ENTERPRISEPACK_B_PILOT"				= "Office 365 (Enterprise Preview)"
+	"ENTERPRISEPACK_FACULTY"				= "Office 365 (Plan A3) for Faculty"
+	"ENTERPRISEPACK_GOV"					= "Microsoft Office 365 (Plan G3) for Government"
+	"ENTERPRISEPACK_STUDENT"				= "Office 365 (Plan A3) for Students"
+	"ENTERPRISEPACKLRG"					    = "Enterprise Plan E3"
+	"ENTERPRISEPACKWITHOUTPROPLUS"       	= "Office 365 Enterprise E3 without ProPlus Add-on"
+	"ENTERPRISEPACKWSCAL"              		= "Office 365 (Plan E4, no more exist)"
+	"ENTERPRISEPREMIUM"					    = "Enterprise E5 (with Audio Conferencing)"
+	"ENTERPRISEPREMIUM_NOPSTNCONF"		    = "Enterprise E5 (without Audio Conferencing)"
+	"ENTERPRISEWITHSCAL"					= "Enterprise Plan E4"
+	"ENTERPRISEWITHSCAL_FACULTY"			= "Office 365 (Plan A4) for Faculty"
+	"ENTERPRISEWITHSCAL_GOV"				= "Microsoft Office 365 (Plan G4) for Government"
+	"ENTERPRISEWITHSCAL_STUDENT"			= "Office 365 (Plan A4) for Students"
+	"EOP_ENTERPRISE"                		= "Exchange Online Protection"
+	"EOP_ENTERPRISE_FACULTY"				= "Exchange Online Protection for Faculty"
+	"EQUIVIO_ANALYTICS"					    = "Office 365 Advanced eDiscovery"
+	"EQUIVIO_ANALYTICS_FACULTY"          	= "Office 365 Advanced Compliance for faculty"
+	"ESKLESSWOFFPACK_GOV"                	= "Microsoft Office 365 (Plan K2/F2) for Government"
+	"EXCHANGE_ANALYTICS"                 	= "Delve Analytics"
+	"EXCHANGE_L_STANDARD"				    = "Exchange Online (Plan 1)"
+	"EXCHANGE_S_ARCHIVE_ADDON_GOV"		    = "Exchange Online Archiving"
+	"EXCHANGE_S_DESKLESS" 					= "Exchange Online Kiosk (plan F1)"
+	"EXCHANGE_S_DESKLESS_GOV"			    = "Exchange Kiosk"
+	"EXCHANGE_S_ENTERPRISE_GOV"			    = "Exchange Plan 2G"
+	"EXCHANGE_S_STANDARD"					= "Exchange Online (Plan 2)"
+	"EXCHANGE_S_STANDARD_MIDMARKET"		    = "Exchange Online (Plan 1)"
+	"EXCHANGEARCHIVE"                    	= "Exchange Online Archiving"
+	"EXCHANGEARCHIVE_ADDON"				    = "Exchange Online Archiving For Exchange Online"
+	"EXCHANGEDESKLESS"					    = "Exchange Online Kiosk"
+	"EXCHANGEENTERPRISE"					= "Exchange Online Plan 2"
+	"EXCHANGEENTERPRISE_FACULTY"        	= "Exchange Online Plan 2 for Faculty"
+	"EXCHANGEENTERPRISE_GOV"				= "Microsoft Office 365 Exchange Online (Plan 2) only for Government"
+	"EXCHANGESTANDARD"					    = "Office 365 Exchange Online Only"
+	"EXCHANGESTANDARD_GOV"				    = "Microsoft Office 365 Exchange Online (Plan 1) only for Government"
+	"EXCHANGESTANDARD_STUDENT"			    = "Exchange Online (Plan 1) for Students"
+	"EXCHANGETELCO"                      	= "Exchange Online POP"
+	"FLOW_FREE"							    = "Microsoft Flow Free"
+	"FLOW_O365_P1" 							= "Flow for Office 365 (Office 365 Business and Enterprise plan, Microsoft 365 Business)"
+	"FLOW_O365_S1" 							= "Flow (F1 plan)"
+	"FLOW_P1"								= "Microsoft Flow Plan 1"
+	"FLOW_P2"								= "Microsoft Flow Plan 2"
+	"FORMS_PLAN_E1"					 		= "Microsoft Forms (Plan E1)"
+	"FORMS_PLAN_K" 							= "Microsoft Forms (Plan F1)"
+	"INTUNE_A"							    = "Windows Intune Plan A"
+	"INTUNE_A_VL"                        	= "Intune (Volume License)"
+	"INTUNE_O365" 							= "Mobile Device Management for Office 365"
+	"INTUNE_STORAGE"                     	= "Intune Extra Storage"
+	"IT_ACADEMY_AD"                      	= "Microsoft Imagine Academy"
+	"LITEPACK"							    = "Office 365 (Plan P1)"
+	"LITEPACK_P2"                       	= "Office 365 Small Business Premium"
+	"LOCKBOX"                            	= "Customer Lockbox"
+	"LOCKBOX_ENTERPRISE"                 	= "Customer Lockbox"
+	"MCOEV"									= "SKYPE FOR BUSINESS CLOUD PBX"
+	"MCOIMP" 								= "Skype for Business (plan 1)"
+	"MCOLITE"							    = "Lync Online (Plan 1)"
+	"MCOMEETADV"							= "PSTN conferencing"
+	"MCOPLUSCAL"                         	= "Skype for Business Plus CAL"
+	"MCOPSTN1"                           	= "Skype for Business PSTN Domestic Calling"
+	"MCOPSTN2"								= "Skype for Business PSTN Domestic and International calling"
+	"MCOPSTNC"                          	= "Skype for Business Communication Credits - None?"
+	"MCOPSTNPP"                          	= "Skype for Business Communication Credits - Paid?"
+	"MCOSTANDARD"						    = "Skype for Business Online Standalone Plan 2"
+	"MCOSTANDARD_GOV"					    = "Lync Plan 2G"
+	"MCOSTANDARD_MIDMARKET"				    = "Lync Online (Plan 1)"
+	"MCOVOICECONF"                      	= "Lync Online (Plan 3)"
+	"MCVOICECONF"                       	= "Skype for Business Online (Plan 3)"
+	"MEE_FACULTY"                        	= "Minecraft Education Edition Faculty"
+	"MEE_STUDENT"                        	= "Minecraft Education Edition Student"
+	"MFA_PREMIUM"						    = "Azure Multi-Factor Authentication"
+	"MICROSOFT_BUSINESS_CENTER"          	= "Microsoft Business Center"
+	"MIDSIZEPACK"                        	= "Office 365 Midsize Business"
+	"MS-AZR-0145P"                     		= "Azure"
+	"NBPOSTS"                       		= "Social Engagement Additional 10K Posts"
+	"NBPROFESSIONALFORCRM"              	= "Social Listening Professional"
+	"O365_BUSINESS"						    = "Office 365 Business"
+	"O365_BUSINESS_ESSENTIALS"			    = "Office 365 Business Essentials"
+	"O365_BUSINESS_PREMIUM"				    = "Office 365 Business Premium"
+	"OFFICE_PRO_PLUS_SUBSCRIPTION_SMBIZ"	= "Office ProPlus"
+	"OFFICEMOBILE_SUBSCRIPTION" 			= "Office Mobile Apps for Office 365"
+	"OFFICESUBSCRIPTION"					= "Office 365 ProPlus"
+	"OFFICESUBSCRIPTION_FACULTY"        	= "Office 365 ProPlus for Faculty"
+	"OFFICESUBSCRIPTION_GOV"				= "Office 365 ProPlus"
+	"OFFICESUBSCRIPTION_STUDENT"			= "Office ProPlus Student Benefit"
+	"ONEDRIVESTANDARD"                   	= "OneDrive"
+	"PARATURE_ENTERPRISE"               	= "Parature Enterprise"
+	"PARATURE_FILESTORAGE_ADDON"        	= "Parature File Storage Addon"
+	"PARATURE_SUPPORT_ENHANCED"          	= "Parature Support Enhanced"
+	"PLANNERSTANDALONE"          			= "Planner Standalone"
+	"POWER_BI_ADDON"						= "Office 365 Power BI Addon"
+	"POWER_BI_INDIVIDUAL_USE"            	= "Power BI Individual User"
+	"POWER_BI_INDIVIDUAL_USER" 				= "Power BI for Office 365 Individual"
+	"POWER_BI_PRO"						    = "Power BI Pro"
+	"POWER_BI_STANDALONE"				    = "Power BI Stand Alone"
+	"POWER_BI_STANDARD"					    = "Power-BI Standard"
+	"POWERAPPS_INDIVIDUAL_USER"          	= "Microsoft PowerApps and Logic flows"
+	"POWERAPPS_O365_P1" 					= "PowerApps for Office 365"
+	"POWERAPPS_O365_S1" 				    = "PowerApps (F1 plan)"
+	"POWERAPPS_VIRAL"                    	= "Microsoft PowerApps Plan 2"
+	"PROJECT_CLIENT_SUBSCRIPTION"        	= "Project Pro for Office 365"
+	"PROJECT_ESSENTIALS"                 	= "Project Lite"
+	"PROJECT_MADEIRA_PREVIEW_IW_SKU"		= "Dynamics 365 for Financials for IWs"
+	"PROJECTCLIENT"						    = "Project Professional"
+	"PROJECTESSENTIALS"					    = "Project Lite"
+	"PROJECTONLINE_PLAN_1"				    = "Project Online"
+	"PROJECTONLINE_PLAN_1_FACULTY" 			= "Project Online for Faculty Plan 1"
+	"PROJECTONLINE_PLAN_1_STUDENT" 			= "Project Online for Students Plan 1"
+	"PROJECTONLINE_PLAN_2"				    = "Project Online and PRO"
+	"PROJECTONLINE_PLAN_2_FACULTY" 			= "Project Online for Faculty Plan 2"
+	"PROJECTONLINE_PLAN_2_STUDENT" 			= "Project Online for Students Plan 2"
+	"ProjectPremium"						= "Project Online Premium"
+	"PROJECTPROFESSIONAL"				    = "Project Professional"
+	"PROJECTWORKMANAGEMENT" 				= "Microsoft Planner"
+	"RIGHTSMANAGEMENT"					    = "Information Protection Plan 1"
+	"RIGHTSMANAGEMENT_ADHOC"				= "Azure Rights Management  Ad-hoc"
+	"RIGHTSMANAGEMENT_STANDARD_FACULTY" 	= "Information Rights Management for Faculty"
+	"RIGHTSMANAGEMENT_STANDARD_STUDENT" 	= "Information Rights Management for Students"
+	"RMS_S_ENTERPRISE"					    = "Azure Active Directory Rights Management"
+	"RMS_S_ENTERPRISE_GOV"				    = "Windows Azure Active Directory Rights Management"
+	"SHAREPOINT_PROJECT_EDU"             	= "Project Online for Education"
+	"SHAREPOINTDESKLESS" 					= "Sharepoint Online Kiosk (plan F1)"
+	"SHAREPOINTDESKLESS_GOV"				= "SharePoint Online Kiosk for Government"
+	"SHAREPOINTENTERPRISE"					= "SharePoint Online (Plan 2)"
+	"SHAREPOINTENTERPRISE_EDU"           	= "SharePoint (Plan 2) for EDU"
+	"SHAREPOINTENTERPRISE_GOV"			    = "SharePoint Plan 2G"
+	"SHAREPOINTENTERPRISE_MIDMARKET"		= "SharePoint Online (Plan 1)"
+	"SHAREPOINTLITE"						= "SharePoint Online (Plan 1)"
+	"SHAREPOINTPARTNER"                  	= "SharePoint Online Partner Access"
+	"SHAREPOINTSTANDARD" 					= "SharePoint Online (Plan 1) (include Onedrive)"
+	"SHAREPOINTSTANDARD_YAMMER"          	= "Sharepoint Standard with Yammer"
+	"SHAREPOINTSTORAGE"					    = "SharePoint storage"
+	"SHAREPOINTWAC" 						= "Office Online (canâ€™t be assigned without Sharepoint Online)"
+	"SHAREPOINTWAC_EDU"                  	= "Office Online for Education"
+	"SHAREPOINTWAC_GOV"					    = "Office Online for Government"
+	"SPB"                                   = "Microsoft 365 Business"
+	"SPE_E3"								= "Microsoft 365 E3"
+	"SPE_E5"								= "Microsoft 365 E5"
+	"SPZA_IW"							    = "App Connect"
+	"SQL_IS_SSIM"                        	= "Power BI Information Services"
+	"STANDARD_B_PILOT"					    = "Office 365 (Small Business Preview)"
+	"STANDARDPACK"						    = "Enterprise Plan E1"
+	"STANDARDPACK_FACULTY"				    = "Office 365 (Plan A1) for Faculty"
+	"STANDARDPACK_GOV"					    = "Microsoft Office 365 (Plan G1) for Government"
+	"STANDARDPACK_STUDENT"				    = "Office 365 (Plan A1) for Students"
+	"STANDARDWOFFPACK"					    = "Office 365 (Plan E2)"
+	"STANDARDWOFFPACK_FACULTY"			    = "Office 365 Education E1 for Faculty"
+	"STANDARDWOFFPACK_GOV"				    = "Microsoft Office 365 (Plan G2) for Government"
+	"STANDARDWOFFPACK_IW_FACULTY"		    = "Office 365 Education for Faculty"
+	"STANDARDWOFFPACK_IW_STUDENT"		    = "Office 365 Education for Students"
+	"STANDARDWOFFPACK_STUDENT"			    = "Microsoft Office 365 (Plan A2) for Students"
+	"STANDARDWOFFPACKPACK_FACULTY"		    = "Office 365 (Plan A2) for Faculty"
+	"STANDARDWOFFPACKPACK_STUDENT"		    = "Office 365 (Plan A2) for Students"
+	"STREAM" 								= "Microsoft Stream"
+	"STREAM_O365_E1"    					= "Stream for Office 365 (plan E1)"
+	"STREAM_O365_K"							= "Stream (plan F1 - ex plan K)"
+	"SWAY" 									= "Sway"
+	"TEAMS1"                                = "Microsoft Teams"
+	"VIDEO_INTEROP"							= "Polycom Skype Meeting Video Interop for Skype for Business"
+	"VISIO_CLIENT_SUBSCRIPTION"          	= "Visio Pro for Office 365"
+	"VISIOCLIENT"						    = "Visio Pro Online"
+	"VISIOONLINE_PLAN1"					    = "Visio Online Plan 1"
+	"WACONEDRIVEENTERPRISE"              	= "OneDrive for Business (Plan 2)"
+	"WACONEDRIVESTANDARD"                	= "OneDrive Pack"
+	"WACSHAREPOINTENT"                   	= "Office Web Apps with SharePoint (Plan 2)"
+	"WACSHAREPOINTSTD" 						= "Office Online"
+	"WINDOWS_STORE"							= "Windows Store"
+	"YAMMER_ENTERPRISE" 					= "Yammer Enterprise"
+	"YAMMER_ENTERPRISE_STANDALONE"       	= "Yammer Enterprise"
+	"YAMMER_MIDSIZE"						= "Yammer"
 }
-# Get all users right away. Instead of doing several lookups, we will use this object to look up all the information needed.
-$AllUsers = get-azureaduser -All:$true -ErrorAction SilentlyContinue
+	
+# Get all users and all recipients. Instead of doing several lookups, we will use these objects to look up all the information needed.
+$AllAADUsers = Get-AzureADUser -All:$true -ErrorAction SilentlyContinue 
+$allRecipients = Get-Recipient * -Resultsize unlimited
+
+# MemberType can be empty if user created before 2014 https://www.ronnipedersen.com/2017/10/30/missing-usertype-attribute-in-azure-ad/
+$AllUsers = $AllAADUsers | Where {$_.UserType -eq 'Member' -or $_.UserType -eq $null}
+$AllGuestUsers = $AllAADUsers | Where {$_.UserType -eq 'Guest'}
 
 Write-Host "Gathering Company Information..." -ForegroundColor Yellow
 #Company Information
-$CompanyInfo = Get-AzureADTenantDetail -ErrorAction SilentlyContinue
+#$CompanyInfo = Get-AzureADTenantDetail -ErrorAction SilentlyContinue
 
+#$CompanyName = $CompanyInfo.DisplayName
+#$TechEmail = $CompanyInfo.TechnicalNotificationMails | Out-String
+#$DirSync = $CompanyInfo.DirSyncEnabled
+#$LastDirSync = $CompanyInfo.CompanyLastDirSyncTime
+
+$CompanyInfo = Get-MsolCompanyInformation
 $CompanyName = $CompanyInfo.DisplayName
-$TechEmail = $CompanyInfo.TechnicalNotificationMails | Out-String
-$DirSync = $CompanyInfo.DirSyncEnabled
-$LastDirSync = $CompanyInfo.CompanyLastDirSyncTime
+$TechEmail = $CompanyInfo.TechnicalNotificationEmails | Out-String
+$DirSync = $CompanyInfo.DirectorySynchronizationEnabled
+$LastDirSync = $CompanyInfo.LastDirSyncTime
+$PasswordSynchronizationEnabled = $CompanyInfo.PasswordSynchronizationEnabled
+$LastPasswordSync = $CompanyInfo.LastPasswordSyncTime
+$DirSyncServiceAccount = $CompanyInfo.DirSyncServiceAccount
+$DirSyncClientVersion = $CompanyInfo.DirSyncClientVersion
+$DirSyncServer = $CompanyInfo.DirSyncClientMachineName
 
-
-If ($DirSync -eq $Null)
+If($DirSync -eq $Null)
 {
 	$LastDirSync = "Not Available"
 	$DirSync = "Disabled"
+    $DirSyncServiceAccount = "Not Available"
+    $DirSyncClientVersion = "Not Available"
+    $DirSyncServer = "Not Available"
 }
-If ($PasswordSync -eq $Null)
+If (-not ($PasswordSynchronizationEnabled))
 {
 	$LastPasswordSync = "Not Available"
 }
 
 $obj = [PSCustomObject]@{
-	'Name'					   = $CompanyName
-	'Technical E-mail'		   = $TechEmail
-	'Directory Sync'		   = $DirSync
-	'Last Directory Sync'	   = $LastDirSync
+	'Name'					   		= $CompanyName
+	'Technical E-mail'		   		= $TechEmail
+	'Directory Sync'		   		= $DirSync
+	'Last Directory Sync'	   		= $LastDirSync
+    'PasswordSynchronizationEnabled'= $PasswordSynchronizationEnabled
+    'LastPasswordSync'				= $LastPasswordSync
+	'DirSyncServiceAccount'			= $DirSyncServiceAccount
+	'DirSyncClientVersion' 			= $DirSyncClientVersion
+	'DirSyncServer' 				= $DirSyncServer 
 }
 
 $CompanyInfoTable.add($obj)
@@ -961,7 +1075,6 @@ If (($licensetable).count -eq 0)
 	}
 }
 
-
 $IsLicensed = ($AllUsers | Where-Object { $_.assignedlicenses.count -gt 0 }).Count
 $objULic = [PSCustomObject]@{
 	'Name'	   = 'Users Licensed'
@@ -984,6 +1097,7 @@ If (($IsLicensedUsersTable).count -eq 0)
 	}
 }
 
+
 Write-Host "Getting Users..." -ForegroundColor Yellow
 Foreach ($User in $AllUsers)
 {
@@ -991,9 +1105,21 @@ Foreach ($User in $AllUsers)
 	$NewObject02 = New-Object 'System.Collections.Generic.List[System.Object]'
 	$NewObject01 = New-Object 'System.Collections.Generic.List[System.Object]'
     $UserLicenses = ($user | Select -ExpandProperty AssignedLicenses).SkuID
+    # The Get-MailboxStatistics is not accurate https://www.petri.com/get-mailboxstatistics-cmdlet-wrong. Prefer Search-UnifiedLog
+	# Search limited to one week to speed up and switch to 3 months if not found (maximum allowed by Search-UnifiedAuditLog) 
+	$LastLogon = (Search-UnifiedAuditLog -UserIds $User.UserPrincipalName -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -Operations "UserLoggedIn" | Select-Object -First 1).CreationDate
+		
+	if($LastLogon -eq $null)
+	{
+		$LastLogon = (Search-UnifiedAuditLog -UserIds $User.UserPrincipalName -StartDate (Get-Date).AddMonths(-3) -EndDate (Get-Date) -Operations "UserLoggedIn" | Select-Object -First 1).CreationDate
+		if($LastLogon -eq $null)
+        {
+            $LastLogon = 'Never'
+        }
+    }
+
 	If (($UserLicenses).count -gt 1)
 	{
-	$LastLogon = Get-MailboxStatistics $User.DisplayName | Select-Object -ExpandProperty LastLogonTime
 		Foreach ($UserLicense in $UserLicenses)
 		{
             $UserLicense = ($licenses | Where-Object { $_.skuid -match $UserLicense }).SkuPartNumber
@@ -1017,7 +1143,7 @@ Foreach ($User in $AllUsers)
 	}
 	Elseif (($UserLicenses).count -eq 1)
 	{
-	$LastLogon = Get-MailboxStatistics $User.DisplayName | Select-Object -ExpandProperty LastLogonTime
+
 		$lic = ($licenses | Where-Object { $_.skuid -match $UserLicenses}).SkuPartNumber
 		$TextLic = $Sku.Item("$lic")
 		If (!($TextLic))
@@ -1037,7 +1163,6 @@ Foreach ($User in $AllUsers)
 	}
 	Else
 	{
-	$LastLogon = $Null
 		$NewObject01 = [PSCustomObject]@{
 			'Licenses'	   = $Null
 		}
@@ -1067,13 +1192,13 @@ Foreach ($User in $AllUsers)
 	$ResetPW = Get-User $User.DisplayName | Select-Object -ExpandProperty ResetPasswordOnNextLogon 
 	
  $obj = [PSCustomObject]@{
-		    'Name'				                   = $Name
-		    'UserPrincipalName'	                   = $UPN
-		    'Licenses'			                   = $UserLicenses
-            'Last Mailbox Logon'                   = $LastLogon
-		    'Reset Password at Next Logon'         = $ResetPW
-		    'Enabled'			                   = $Enabled
-		    'E-mail Addresses'	                   = $ProxyC
+		    'Name'				               	= $Name
+		    'UserPrincipalName'	              	= $UPN
+		    'Licenses'			              	= $UserLicenses
+            'Last Logon'                  		= $LastLogon
+		    'Reset Password at Next Logon'  	= $ResetPW
+		    'Enabled'			              	= $Enabled
+		    'E-mail Addresses'	              	= $ProxyC
 	    }
 	
 	$usertable.add($obj)
@@ -1085,9 +1210,69 @@ If (($usertable).count -eq 0)
 	}
 }
 
+Write-Host "Getting Guests..." -ForegroundColor Yellow
+Foreach ($guest in $AllGuestUsers)
+{
+	$ProxyA = New-Object 'System.Collections.Generic.List[System.Object]'
+	$NewObject02 = New-Object 'System.Collections.Generic.List[System.Object]'
+	$NewObject01 = New-Object 'System.Collections.Generic.List[System.Object]'
+
+	# Search limited to 3 months according to the restrictions on Search-UnifiedAuditLog
+	$last = Search-UnifiedAuditLog -UserIds $guest.UserPrincipalName -StartDate (Get-Date).AddDays(-90) -EndDate (Get-Date) -SessionCommand ReturnNextPreviewPage | Select-Object -First 1
+	
+ 
+
+	$Name = $guest.DisplayName
+	$UPN = $guest.UserPrincipalName
+	$SignInName = $guest.OtherMails | ForEach {$_ -join ','}
+	$EmailAddresses = ($guest.ProxyAddresses | ForEach {($_ -split ':')[1]}) -join ','
+	$Enabled = $guest.AccountEnabled
+    $userState = $guest.userState
+	$UserStateChangedOn = $guest.UserStateChangedOn
+	$CreationType = $guest.CreationType
+    
+    if($last -eq $null)
+    {
+        $LastOperation = 'None'
+        $LastOperationTime = 'Never'
+        $LastOperationSourceIP = 'Never'
+    }
+    else
+    {
+        $last = $last | Select-Object -ExpandProperty AuditData | ConvertFrom-Json
+        $LastOperation = $last.Workload + '-' + $last.Operation
+        $LastOperationTime = $last.CreationTime 
+        $LastOperationSourceIP = $last.ClientIP
+    }
+	
+ $obj = [PSCustomObject]@{
+		    'Name'				                   	= $Name
+		    'UserPrincipalName'	                   	= $UPN
+		    'Enabled'			                   	= $Enabled
+		    'SignIn Email'	                   		= $SignInName
+            'Creation Type'							= $CreationType
+            'UserState'	                   			= $userState
+			'UserState Changed'						= $UserStateChangedOn
+            'EmailAddresses'						= $EmailAddresses
+			'LastOperation' 						= $LastOperation
+			'LastOperationTime' 					= $LastOperationTime
+			'LastOperationSourceIP' 				= $LastOperationSourceIP
+	    }
+	
+	$GuestTable.add($obj)
+}
+If (($GuestTable).count -eq 0)
+{
+	$GuestTable = [PSCustomObject]@{
+		'Information'  = 'Information: No Guest were found in the tenant'
+	}
+}
+
 Write-Host "Getting Shared Mailboxes..." -ForegroundColor Yellow
 #Get all Shared Mailboxes
-$SharedMailboxes = Get-Recipient -Resultsize unlimited | Where-Object { $_.RecipientTypeDetails -eq "SharedMailbox" }
+# use '*' to solve issue occurs somtimes with many recipients
+$SharedMailboxes = $allRecipients | Where-Object { $_.RecipientTypeDetails -eq "SharedMailbox" }
+
 Foreach ($SharedMailbox in $SharedMailboxes)
 {
 	$ProxyA = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -1103,8 +1288,11 @@ Foreach ($SharedMailbox in $SharedMailboxes)
 			{
 				$ProxyB = $Null
 			}
-			$ProxyA.add($ProxyB)
-			$ProxyC = $ProxyA
+            else
+            {
+			    $ProxyA.add($ProxyB)
+			    $ProxyC = $ProxyA
+            }
 		}
 	}
 	Else
@@ -1134,7 +1322,8 @@ If (($SharedMailboxTable).count -eq 0)
 
 Write-Host "Getting Contacts..." -ForegroundColor Yellow
 #Get all Contacts
-$Contacts = Get-MailContact
+$Contacts = $allRecipients | Where-Object { $_.RecipientTypeDetails -eq "MailContact" }
+
 #Split licenses at colon
 Foreach ($Contact in $Contacts)
 {
@@ -1159,7 +1348,8 @@ If (($ContactTable).count -eq 0)
 
 Write-Host "Getting Mail Users..." -ForegroundColor Yellow
 #Get all Mail Users
-$MailUsers = Get-MailUser
+$MailUsers = $allRecipients | Where-Object { $_.RecipientTypeDetails -eq "MailUser" }
+
 foreach ($MailUser in $mailUsers)
 {
 	$MailArray = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -1192,7 +1382,8 @@ If (($ContactMailUserTable).count -eq 0)
 }
 
 Write-Host "Getting Room Mailboxes..." -ForegroundColor Yellow
-$Rooms = Get-Mailbox -ResultSize Unlimited -Filter '(RecipientTypeDetails -eq "RoomMailBox")'
+$Rooms = $allRecipients | Where-Object { $_.RecipientTypeDetails -eq "RoomMailBox" }
+
 Foreach ($Room in $Rooms)
 {
 	$RoomArray = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -1224,7 +1415,8 @@ If (($RoomTable).count -eq 0)
 }
 
 Write-Host "Getting Equipment Mailboxes..." -ForegroundColor Yellow
-$EquipMailboxes = Get-Mailbox -ResultSize Unlimited -Filter '(RecipientTypeDetails -eq "EquipmentMailBox")'
+$EquipMailboxes = $allRecipients | Where-Object { $_.RecipientTypeDetails -eq "EquipmentMailBox" }
+
 Foreach ($EquipMailbox in $EquipMailboxes)
 {
 	$EquipArray = New-Object 'System.Collections.Generic.List[System.Object]'
@@ -1257,7 +1449,7 @@ If (($EquipTable).count -eq 0)
 
 Write-Host "Generating HTML Report..." -ForegroundColor Yellow
 
-$tabarray = @('Dashboard', 'Admins', 'Users', 'Groups', 'Licenses', 'Shared Mailboxes', 'Contacts', 'Resources')
+$tabarray = @('Dashboard', 'Admins', 'Users', 'Groups', 'Licenses', 'Shared Mailboxes', 'Contacts', 'Resources', 'Guests')
 
 #basic Properties 
 $PieObject2 = Get-HTMLPieChartObject
@@ -1499,6 +1691,11 @@ $rpt += Get-HTMLTabHeader -TabNames $tabarray
         $rpt += Get-HTMLContentClose
     $rpt += get-htmltabcontentclose
 	
+		    $rpt += get-htmltabcontentopen -TabName $tabarray[8] -TabHeading ("Report: " + (Get-Date -Format MM-dd-yyyy))
+        $rpt += Get-HTMLContentOpen -HeaderText "Office 365 Guests"
+            $rpt += get-htmlcontentdatatable $guestTable -HideFooter
+        $rpt += Get-HTMLContentClose
+    $rpt += get-htmltabcontentclose
 
 $rpt += Get-HTMLClosePage
 
